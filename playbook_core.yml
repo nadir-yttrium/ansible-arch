@@ -18,8 +18,7 @@
       pacman:
         update_cache: yes
         name:
-          - nano
-          - micro
+          - neovim
           - git
           - curl
           - wget
@@ -27,9 +26,14 @@
           - nnn
           - bat
           - tree
+          - zstd
           - unarchiver
           - duf
           - ncdu
+          - ripgrep
+          - fd
+          - bat
+          - btop
           - htop
           - iotop
           - glances
@@ -40,6 +44,7 @@
           - nload
           - sysfsutils
           - borg
+          - restic
           - fuse
           - python-llfuse
           - python-pip
@@ -56,17 +61,24 @@
         validate: /usr/sbin/visudo -cf %s
         create: yes
 
-    - name: git clone yay-bin repo in to /tmp
+    # - name: git clone yay-bin repo in to /tmp
+    #   become: no
+    #   git:
+    #     repo: 'https://aur.archlinux.org/yay-bin.git'
+    #     dest: /tmp/yay-bin
+    #     clone: yes
+
+    - name: git clone paru-bin repo in to /tmp
       become: no
       git:
-        repo: 'https://aur.archlinux.org/yay-bin.git'
-        dest: /tmp/yay-bin
+        repo: 'https://aur.archlinux.org/paru-bin.git'
+        dest: /tmp/paru-bin
         clone: yes
 
-    - name: install yay using makepkg
+    - name: install paru using makepkg
       become: no
       expect:
-        chdir: /tmp/yay-bin
+        chdir: /tmp/paru-bin
         command: makepkg -si
         responses:
           (?i)Proceed with installation: "y"
@@ -90,11 +102,11 @@
         regexp: '#ParallelDownloads = 5'
         line: 'ParallelDownloads = 5'
 
-    - name: makepkg - disable compression
-      lineinfile:
-        path: /etc/makepkg.conf
-        regexp: "PKGEXT='.pkg.tar.zst'"
-        line: "PKGEXT='.pkg.tar'"
+    # - name: makepkg - disable compression
+    #   lineinfile:
+    #     path: /etc/makepkg.conf
+    #     regexp: "PKGEXT='.pkg.tar.zst'"
+    #     line: "PKGEXT='.pkg.tar'"
 
     - name: makepkg - enable parallel compilation MAKEFLAGS="-j$(nproc)"
       lineinfile:
@@ -122,13 +134,13 @@
         validate: /usr/sbin/visudo -cf %s
         create: yes
 
-    - name: disable need for sudo password for nnn
-      lineinfile:
-        path: /etc/sudoers.d/02_no_pswd_nnn
-        state: present
-        line: "ALL ALL=NOPASSWD:SETENV: /usr/bin/nnn"
-        validate: /usr/sbin/visudo -cf %s
-        create: yes
+    # - name: disable need for sudo password for nnn
+    #   lineinfile:
+    #     path: /etc/sudoers.d/02_no_pswd_nnn
+    #     state: present
+    #     line: "ALL ALL=NOPASSWD:SETENV: /usr/bin/nnn"
+    #     validate: /usr/sbin/visudo -cf %s
+    #     create: yes
 
 # SSH ------------------------------------------------------------------------
 
@@ -158,16 +170,16 @@
 
 # CRONIE  --------------------------------------------------------------------
 
-    - name: install cronie
-      pacman:
-        name:
-          - cronie
+    # - name: install cronie
+    #   pacman:
+    #     name:
+    #       - cronie
 
-    - name: enable and start cronie.service
-      systemd:
-        name: cronie
-        enabled: yes
-        state: started
+    # - name: enable and start cronie.service
+    #   systemd:
+    #     name: cronie
+    #     enabled: yes
+    #     state: started
 
 # SSD TRIM SCHEDULED  --------------------------------------------------------
 
@@ -245,8 +257,8 @@
         dest: '/etc/xdg/reflector/reflector.conf'
         content: |
           --save /etc/pacman.d/mirrorlist
-          --protocol http
-          --country SK,CZ
+          --protocol https
+          --country DE
           --score 20
           --sort rate
 
@@ -358,21 +370,28 @@
     - name: install micro text editor
       pacman:
         name:
-          - micro
+          - neovim
 
-    - name: copy config directory with prefernces, hotkeys, syntax highlight
+    # - name: copy config directory with prefernces, hotkeys, syntax highlight
+    #   become: no
+    #   copy:
+    #     src: .config/micro
+    #     dest: ~/.config
+    #     mode: 0644
+
+    - name: copy config directory 
       become: no
       copy:
-        src: .config/micro
+        src: .config/neovim
         dest: ~/.config
         mode: 0644
-
+    
     - name: set default editor in .bashrc
       become: no
       blockinfile:
         path: ~/.bashrc
         block: |
-          export EDITOR=micro
-          export VISUAL=micro
+          export EDITOR=neovim
+          export VISUAL=neovim
 
 #  ---------------------------------------------------------------------------
